@@ -30,94 +30,169 @@ Is  a novelty goods importer and wholesale distributor, operating from the San F
  ### Data sources
  ---
 
-*Company  Data  ,the dataset use for this analysis is  WIWO DW  . we have data on sales , promotions , products , stores and managers*
+*Company  Data  ,the dataset use for this analysis is  WIWO DW . As alternative wow folder that conatin the fact and the dimenion tables in excel can be use*
 
 ### Tools
 ---
 
-  - Excel-power query : Data cleaning
-  - Excel-power pivot : Data model 
-  - Excel-power pivot-DAX : Calculating mesures
-  - Excel-pivot table : Dynamic tables
-  - Excel-pivot chart : Dynamic visualisation
-      - [Download Excel here](https://microsoft.com)
+  - Azure data studio and SQL : querying data
 
-### Data cleaning 
+## Exploratory data analysis
 ---
 
-    1.No duplicate found
-	2.No Null/NA value found
-	3.ALL columns had correct value format
-	  
-We just had to transform the data on sales , promotions , products , stores and managers into tables
+--How many rows are in the FactSale table? 
 
-### Exploratory data analysis
----
+``` SQL
+		select COUNT(*) as Number_of_Rows
+		from factSale ;
 
-EDA involved exploring  the sales data to  answer key question , such as :
+	or
 
-  - What is the overrall  sales trends ?
-  - what is the Sales units, growth sales and margin per store  ?
-  - what is the Sales units, growth sales and margin per category  ?
-  - what is the Sales units, growth sales and margin per brand  ?
+		select COUNT(*) as [Number of Rows]
+		from factSale ;
+		
+```
+--What data type is the Quantity column in FactSale? 
+
+``` SQL
+By checking the Database and the documentation we see that it is an integer
+	
+```
+--How many columns in the FactOrder table can contain null values? 
+
+``` SQL
+By checking the Database , running the below queries, we see that 3 columns has null values : Picked Date Key , Picker Key and WWI Backorder ID
+
+			select *
+			from factOrder
+			order by [WWI Backorder ID] ASC ;
+                  and
+			select *
+			from factOrder
+			order by [Picked Date Key] ASC ;
+                  and
+			select *
+			from factOrder
+			order by [Picker Key] ASC ;	
+```
+
+--Does the Staging_factSale table contain any data?
+
+``` SQL
+By running the below queries, we see that Staging_factSale , have no data  . Staging table are use in the ETL process , and is been cleared when the data has been loaded
+
+			SELECT* FROM
+			Staging_factSale; 
+```
+
+--Do the collation properties of the server suggest the database is case sensitive? 
+
+
+``` SQL
+By running the below queries, it gives as result: SQL_Latin1_General_CP1_CI_AS . CI stand for case insensitive , so the database is not case sensitive
+
+                SELECT CONVERT(varchar(256),ServerProperty('collation'))
+
+```
+--What does the lineage column mean in the fact and dimension tables? 
+
+``` SQL
+According to the documentation provided by the Data enginer ,The lineage table combined with the lineage columns helps to understand which data was updated and when.
+	
+```
+
+--What key is enforced between FactSale and dimCustomer dimension?
+
+``` SQL
+we can see in the database in the factsale table in the keys , that the enforced key is : FK_Fact_Sale_Customer_Key_Dimension_Customer
+	
+```
+
+----Exploration of customer data-----
+--How would you best describe the type of customers that we have? 
+     
+``` SQL
+Base on the query below , we that there is mainly two buying group Tailspin Toys  and Wingtip Toys . They all buy same category of good Novelty 
+
+```
+
+--How many rows does the dimCustomer table have? 
+
+
+``` SQL
+By running the below queries, we can see that it has 403
+
+		select count(*) NumberOfRowDimCustumer
+		from dimCustomer;	
+```
+
+--Does the customer dimension include an entry for Unknown? 
+
+``` SQL
+By running the below queries, we can see that , the custumer dimension has one entry for unknown
+
+		select customer
+		from dimCustomer 
+		where customer ='unknown';	
+```
+
+--How many known customers do we have?
+
+``` SQL
+By running the below queries, we can see that we have only customer 402
+
+		select count(*) as NumberOfCustomer
+		from dimCustomer
+		where customer != 'unknown';	
+```
+
+ ----Exploration of product data-----
+ -How many foreign keys does the DimStockItem table have? 
+
+``` SQL
+we can see in the database and the  based on ERD that it has zero foreign key and one primary key
+
+```
+--How many rows are in the dimStockItem table? 
+
+``` SQL
+By running the below queries, we can see that there is 229 rows
+
+		select *
+		FROM DimStockItem ;
+
+	OR
+		select COUNT(*) as PRODUCT
+		FROM DimStockItem ;	
+```
+
+--How many known products are we dealing with? 
+
+``` SQL
+
+By running the below queries, we can see that we have only products 228
+
+		select COUNT(*) 
+		FROM DimStockItem 
+		where [Stock Item] <> 'unknown'
+```
+--What does the “Is Chiller Stock” column mean?
+``` SQL
+According to the documentation provided by the Data enginer , to check if the stock item need to be constantly refrigerated or not
+
+```
 
 ### Data analysis
 ---
 
-```DAX
-To create the model , the source data has been normalized  in order to Reduced storage space , Easier maintenance and Improved query speed . The normalization gave
-	  - One fact table ; Sales Fact Table
-	  - Five dimension tables  ; Product Dimension Table , Store Dimension Table , Date Dimension Table , Manager Dimension Table and Commission Dimension
-        Table
-	  - Created relationship between Sales Fact Table and dimension tables to build the model
-	  - Creating implicit measures
-
---Measure to calculate units sold :: Units:=sum(Sales[Units Sold])
---Measure to calculate Margin Amount :: MarginAmt:=sum([MarginDollars])
---Measure to calculate sales :: Sales:=SUMX(Sales,[Units Sold]*[UnitPrice])
---Measure to calculate margin percentage :: MarginPct:=[MarginAmt]/[Sales]
---Measure to calculate sales days  ::  SalesDays:=DISTINCTCOUNT([DateID])
---Measure to calculate sales per days :: SalesPerDay:=[Sales]/[SalesDays]
---Calculating Sales percentage of total of product :: Pdt_Sales_PCT:=[Sales]/CALCULATE([Sales],ALL(Dim_Products))
---Calculating Sales percentage of total of managers  :: Mger_sales_PCT:= [Sales] / CALCULATE([Sales],ALL(Dim_Managers))
---Calculating Sales percentage of total of days  :: Day_Sales_PCT:=
-   var TotalSales = CALCULATE([Sales],ALLSELECTED(Dim_Dates))
-   var Daysales =[Sales]
-   return  TotalSales /  Daysales
---calculating promotion sales  :: PromoSales:=CALCULATE([Sales],Sales[Promo]<>"")
---Calculating promotion sales percentage :: Promo_sales_PCT:=[PromoSales] /[Sales]
---Calculating sales of previous year :: SalesPY:=CALCULATE([Sales],SAMEPERIODLASTYEAR(Dim_Dates[Date]))
---Calculating sales growth :: SalesGrowth:=IFERROR([Sales]/[SalesPY]-1, "NA")
---Calculating margin growth ::MarginGrowth:=
-    var MarginPY = CALCULATE([MarginPct],SAMEPERIODLASTYEAR(Dim_Dates[Date])) 
-    return [MarginPct] - MarginPY		
---Calculating sales per day YTD :: SalesPerdayYTD:=CALCULATE([SalesPerDay],DATESYTD(Dim_Dates[Date]))
-
-
-
- ##Function use
-	 
-		-- Creating a calculated column for the store size using the switch function :: =SWITCH(Dim_Stores[Store Type],"SM","Small","MED","Medium","WAREHOUSE","WAREHOUSE","OTHER")
-			
-	  - Other calculation
-			
-		-- Creating a calculated column for the MarginDollar  :: =[Units Sold]*[UnitPrice]*[RawMargin]
-		-- Creating a calculated commission column in the sales table :: =RELATED(Dim_Commission[Commission])*[Units Sold]*[UnitPrice]	
-		
-## Renaming of  Measures name in pivot table
-		
-		   YoY sales(Salegrowth) , means year over year sales
-		   pdt_sales_PCT share(share) in the business overview
-		   Margin(MarginPct)
-		   MarginGrowth(Yoy Margin)
-		   promo_sales_PCT (Promo%)
-		   Day_Sales_PCT(share)in the store performance
-		   SalesPerDay(Sales/Day)
-		   SalesPerdayYTD (Sales/day YTD)
-		   SalesDays(days worked)
-
-		
+``` SQL		
 ```
+
+
+
+``` SQL		
+```
+
 
 ### Findings
 ---
