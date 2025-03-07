@@ -18,10 +18,10 @@ Is  a novelty goods importer and wholesale distributor, operating from the San F
   
 ---- **Delivrables**
 
-• 	Help the marketing team make decisions for a new Halloween social media campaign.
-• 	Help the delivery team make decisions for a delivery efficiency trial.
-• 	Help onboard a new member of the finance team by analyzing data across time.
-• 	Help the product team by evaluating the performance of specific products, including a new chilled products line
+ 	Help the marketing team make decisions for a new Halloween social media campaign.
+	Help the delivery team make decisions for a delivery efficiency trial.
+ 	Help onboard a new member of the finance team by analyzing data across time.
+ 	Help the product team by evaluating the performance of specific products, including a new chilled products line
  
 
 
