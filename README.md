@@ -6,7 +6,6 @@
 -  [Project Overview](#project-overview)
 -  [Data Sources](#data-sources)
 -  [Tools](#tools)
--  [Data cleaning ](#data-cleaning )
 -  [Exploratory data analysis](#exploratory-data-analysis)
 -  [Data analysis](#data-analysis)
   
@@ -29,7 +28,7 @@ Is  a novelty goods importer and wholesale distributor, operating from the San F
  ### Data sources
  ---
 
-*Company  Data  ,the dataset use for this analysis is  WIWO DW . As alternative wow folder that conatin the fact and the dimenion tables in excel can be use*
+*Company  Data  ,the dataset use for this analysis is  WIWO DW from the company database . As alternative wow folder that conatin the fact and the dimenion tables in excel can be use*
 
 ### Tools
 ---
